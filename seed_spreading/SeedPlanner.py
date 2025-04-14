@@ -88,22 +88,50 @@ class SeedPlanner:
         
 
 
-    def get_seed_path(self, start, goal) -> np.ndarray:
+    def get_seed_path(self, start:np.array, end:np.array) -> np.ndarray:
+        '''
+        Get the seed spreader path for the polygon patch.
+        '''
 
 
-        width = self.max_x - self.min_x
-        height = self.max_y - self.min_y
+        # Find the direction of the start->end vector
 
-        if width > height:
-            path = self.get_horiz_path(start, goal)
-        else:
-            path = self.get_vert_path(start, goal)
+        dir_vec = np.array(end) - np.array(start)
 
-        self.path = path
+        compass_dir = self.get_compass_direction(dir_vec)
+
+        path = []
+
+        if compass_dir == "N" or compass_dir == "S":
+
+            path1 = self.get_vert_path(start, end, mirrored=False)
+            path2 = self.get_vert_path(end, start, mirrored=True)
+
+            # path is the path that has a start point closer to the start point
+
+            if np.linalg.norm(path1[0] - start) < np.linalg.norm(path2[0] - start):
+                path = path1
+            else:
+                path = path2
+
+        elif compass_dir == "E" or compass_dir == "W":
+                
+                path1 = self.get_horiz_path(start, end, mirrored=False)
+                path2 = self.get_horiz_path(end, start, mirrored=True)
+    
+                # path is the path that has a start point closer to the start point
+    
+                if np.linalg.norm(path1[0] - start) < np.linalg.norm(path2[0] - start):
+                    path = path1
+                else:
+                    path = path2
+
         return path
 
+        
 
-    def get_vert_path(self, start, goal)-> np.ndarray:
+
+    def get_vert_path(self, start, goal, mirrored=False)-> np.ndarray:
         '''
         Get the seed spreader path for the polygon patch
         assuming that we plow vertically.
@@ -120,13 +148,6 @@ class SeedPlanner:
             A list of points that make up the path.
         '''
 
-        left_to_right = True
-        
-        if start[0] > goal[0]:
-            left_to_right = False
-
-
-        
         path = []
 
         # Make an array of grid points that box the polygon
@@ -139,7 +160,7 @@ class SeedPlanner:
         i_range = np.arange(len(x_points))
         j_range = np.arange(len(y_points))
 
-        if not left_to_right:
+        if not mirrored:
             i_range = np.flip(i_range)
 
         if start[1] > goal[1]:
@@ -173,7 +194,7 @@ class SeedPlanner:
         return np.array(path)
 
 
-    def get_horiz_path(self, start, goal)-> np.ndarray:
+    def get_horiz_path(self, start, goal, mirrored = False)-> np.ndarray:
 
         '''
         Get the seed spreader path for the polygon patch
@@ -191,9 +212,6 @@ class SeedPlanner:
             A list of points that make up the path.
         '''
 
-        up_to_down = start[1] > goal[1]
-        
-
         path = []
 
         # Make an array of grid points that box the polygon
@@ -206,7 +224,7 @@ class SeedPlanner:
         i_range = np.arange(len(x_points))
         j_range = np.arange(len(y_points))
 
-        if not up_to_down:
+        if mirrored:
             j_range = np.flip(j_range)
 
         if start[0] > goal[0]:
@@ -299,6 +317,31 @@ class SeedPlanner:
 
         plt.show()
 
+        ### Auxilary Functions -- stuff to help with the math ###
+
+    def get_compass_direction(vec)->str:
+        """
+        Gets the compass direction of a vector.
+
+        args: vec -- a 2D vector
+
+        returns: direction -- a string of the compass direction
+        """
+        
+        vec_angle = np.arctan2(vec[1], vec[0])
+
+        if vec_angle > np.pi/4 and vec_angle < 3*np.pi/4:
+            return "N"
+        elif np.abs(vec_angle) > 3*np.pi/4:
+            return "W"
+        elif vec_angle < -np.pi/4 and vec_angle > -3*np.pi/4:
+            return "S"
+        elif np.abs(vec_angle) < np.pi/4:
+            return "E"
+        else:
+            raise ValueError("Vector is not a valid direction. Sei la cara")
+
+
 
 class Polygon_Edge:
     '''
@@ -331,6 +374,9 @@ class Polygon_Edge:
         else:
             self.slope = (end[1] - start[1]) / (end[0] - start[0])
             self.y_intercept = start[1] - self.slope * start[0]
+
+
+    
 
         
 
@@ -453,6 +499,9 @@ class Polygon_Edge:
             return (False, None)
         
 
+    
+        
+
 
 
 #=========================#
@@ -460,10 +509,10 @@ class Polygon_Edge:
 #=========================#
 if __name__ == "__main__":
 
-    polyon_points = [(142.2, 0),
-                     (142.8, 0),
-                     (142.8, 16),
-                     (142.2, 16)]
+    polyon_points = [(142.5898, 0),
+                     (142.2931, 0),
+                     (142.2931, 16.35214409),
+                     (142.5898, 16.25214)]
     
     polyon_points = np.array(polyon_points)
     seed_planner = SeedPlanner()
