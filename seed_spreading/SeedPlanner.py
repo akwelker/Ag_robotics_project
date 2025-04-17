@@ -126,6 +126,7 @@ class SeedPlanner:
                 else:
                     path = path2
 
+        self.path = path
         return path
 
         
@@ -286,7 +287,7 @@ class SeedPlanner:
 
         
 
-    def print_path(self, path=None) -> None:   
+    def print_path(self, path=None, show=False)->plt.axes:   
         '''
         Print the path to the screen.
 
@@ -314,12 +315,15 @@ class SeedPlanner:
         if len(path) > 0:
 
             ax.plot(path[:, 0], path[:, 1], 'r-o')
+        
+        if show == True:
+            plt.show()
 
-        plt.show()
+        return ax
 
         ### Auxilary Functions -- stuff to help with the math ###
 
-    def get_compass_direction(vec)->str:
+    def get_compass_direction(self, vec)->str:
         """
         Gets the compass direction of a vector.
 
