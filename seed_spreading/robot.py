@@ -9,18 +9,19 @@ import numpy as np
 
 class Robot:
 
-    lin_max_speed = 0.5 # The speed of the robot (units/s)
-    ang_max_speed = 2*np.pi # The angular speed of the robot (radians/s)
+    lin_max_speed = 1.0 # The speed of the robot (units/s)
+    ang_max_speed = 1*np.pi # The angular speed of the robot (radians/s)
 
     path = None  # The path that the robot is following
     
     state = None # State of the robot (x, y, theta, velocity, theta_dot)
     k_steering = None # The turning gain for the robot
     k_distance = None # The distance gain for the robot
+    k_path = None # Potential Field gain
 
 
     def __init__(self, init_state:np.ndarray, path:np.ndarray, 
-                 k_steering:float, k_distance:float)-> None:
+                 k_steering:float, k_distance:float, k_path:float)-> None:
         '''
         Initialize the robot with a given state, path, and gains.
 
@@ -37,6 +38,7 @@ class Robot:
             assert path.shape[1] == 2
             assert isinstance(k_steering, float) and k_steering > 0
             assert isinstance(k_distance, float) and k_distance > 0
+            assert isinstance(k_path, float) and k_path > 0
 
         except AssertionError:
 
@@ -46,6 +48,7 @@ class Robot:
         self.path = path
         self.k_steering = k_steering
         self.k_distance = k_distance
+        self.k_path = k_path
 
         self.path_index = 0 # The index of the path that the robot is following
 
@@ -83,7 +86,7 @@ class Robot:
         e = R_path @ path_error
 
         # Now we can calculate the potential field
-        path_pot_vector = np.array([-self.k_distance * e.item(0), 1])
+        path_pot_vector = np.array([-self.k_path * e.item(0), np.linalg.norm(q) - e.item(1)])
 
         # Now rotate that back into the world frame
 

@@ -41,10 +41,11 @@ ax = seed_planner.print_path(path=waypoint_path, show=False)
 
 robot_init_state = np.append(start_point, [np.pi/2,0,0])
 k_distance = 0.5
+k_path = 2.0
 k_angle = 5.0
 
 
-tractor = Robot(robot_init_state,waypoint_path,k_angle, k_distance)
+tractor = Robot(robot_init_state,waypoint_path,k_angle, k_distance, k_path)
 
 dt = 0.001
 
