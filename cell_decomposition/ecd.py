@@ -142,6 +142,7 @@ class PolygonEnvironment:
                         intersection_ys = []
                         intersection_found = False
 
+                        # Check other obstacles
                         for other in filtered:
                             for edge in other.edges:
                                 intersection = line.intersects(edge)
