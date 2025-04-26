@@ -7,9 +7,9 @@ Implemented trapezoidal decomp from https://github.com/tjdwill/TrapezoidalDecomp
 
 import numpy as np
 import matplotlib.pyplot as plt
-from polygon import Point, Edge, Polygon
 from shapely.geometry import LineString as ShapelyLineString, Polygon as ShapelyPolygon
 from shapely.ops import unary_union, polygonize
+from .polygon import Point, Edge, Polygon
 
 _BOUNDS = "Bounds:"
 _OBSTACLE = "Obstacle:"
