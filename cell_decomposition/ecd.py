@@ -1,7 +1,15 @@
+"""
+Ethan Quinlan  Ag Robotics Project     Spring 25
+
+ecd.py -- Performs exact cell decomposition for a given environment.
+Implemented trapezoidal decomp from https://github.com/tjdwill/TrapezoidalDecomposition/blob/main/trapezoidal_decomposition.py
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
-from shapely.geometry import Polygon, LineString
-from shapely.ops import unary_union, split
+from shapely.geometry import LineString as ShapelyLineString, Polygon as ShapelyPolygon
+from shapely.ops import unary_union, polygonize
+from .polygon import Point, Edge, Polygon
 
 _BOUNDS = "Bounds:"
 _OBSTACLE = "Obstacle:"
@@ -88,12 +96,89 @@ class PolygonEnvironment:
         """
         self.start = np.array([float(l) for l in line_data])
 
-    def exact_cell_decomposition(self):
+    def trapezoidal_decomposition(self):
         """
-        Decompose workspace into exact cells.
+        Divide env into vertical segments
+        """
+        vertical_lines = []
+        obstacles = []
+
+        # Get obstacles as Polygons
+        for polygon in self.polygons:
+            obstacles.append(Polygon(polygon))
+
+        for obstacle in obstacles:
+            # Filter out current obstacle
+            filtered = [x for x in obstacles if x is not obstacle]
+
+            for vertex in obstacle.vertices:
+                # Get the rays that shoot up and down
+                top_ray = Edge(vertex, Point(vertex.x, self.y_max))
+                bottom_ray = Edge(vertex, Point(vertex.x, self.y_min))
+                rays = (top_ray, bottom_ray)
+
+                for i in range(len(rays)):
+                    line = rays[i]
+                    self_intersects = False
+
+                    # Check self intersections
+                    for edge in obstacle.edges:
+                        intersection = line.intersects(edge)
+
+                        if intersection is None or intersection == vertex:
+                            continue
+                        elif (i == 0) and (
+                            obstacle.touches(intersection) and intersection.y > vertex.y
+                        ):
+                            self_intersects = True
+                        elif (i == 1) and (
+                            obstacle.touches(intersection) and intersection.y < vertex.y
+                        ):
+                            self_intersects = True
+
+                    if self_intersects:
+                        continue
+                    else:
+                        intersection_ys = []
+                        intersection_found = False
+
+                        # Check other obstacles
+                        for other in filtered:
+                            for edge in other.edges:
+                                intersection = line.intersects(edge)
+
+                                if (
+                                    (intersection is None)
+                                    or (not edge.on_edge(intersection))
+                                    or (intersection == vertex)
+                                    or (i == 0 and intersection.y < vertex.y)
+                                    or (i == 1 and intersection.y > vertex.y)
+                                ):
+                                    continue
+                                else:
+                                    intersection_ys.append(intersection.y)
+                                    intersection_found = True
+
+                        if not intersection_found:
+                            vertical_lines.append(line)
+                        else:
+                            if i == 0:
+                                intersection_y = min(intersection_ys)
+                            else:
+                                intersection_y = max(intersection_ys)
+                            vertical_lines.append(
+                                Edge(vertex, Point(vertex.x, intersection_y))
+                            )
+
+        self.vertical_lines = vertical_lines
+        return vertical_lines
+
+    def get_cells(self):
+        """
+        Get cells and centroids from vertical lines and obstacles
         """
         # Convert environment bounds to workspace
-        workspace = Polygon(
+        workspace = ShapelyPolygon(
             [
                 (self.x_min, self.y_min),
                 (self.x_max, self.y_min),
@@ -102,45 +187,57 @@ class PolygonEnvironment:
             ]
         )
 
-        # Get obstacles as Polygons
+        # Get workspace edges
+        workspace_edges = []
+        workspace_coords = list(workspace.exterior.coords)
+        for i in range(len(workspace_coords) - 1):
+            p = workspace_coords[i]
+            q = workspace_coords[i + 1]
+            workspace_edges.append(ShapelyLineString([p, q]))
+
+        # Get obstacle edges
         obstacles = []
-        for obs in self.polygons:
-            obstacles.append(Polygon(obs))
+        obstacle_edges = []
+        for obstacle in self.polygons:
+            obstacle_coords = [(float(x), float(y)) for x, y in obstacle]
+            obs_poly = ShapelyPolygon(obstacle_coords)
+            obstacles.append(obs_poly)
+            for i in range(len(obstacle_coords)):
+                p = obstacle_coords[i]
+                q = obstacle_coords[(i + 1) % len(obstacle_coords)]
+                obstacle_edges.append(ShapelyLineString([p, q]))
 
-        # Begin with single cell of environment
-        cells = [workspace.difference(unary_union(obstacles))]
+        # Check for vertical lines
+        if self.vertical_lines == None:
+            print(
+                "Environment needs vertical edges. Has cell trapezoidal_decomposition been performed?"
+            )
+            return
 
-        # Sort by x coords
-        x_coords = {self.x_min, self.x_max}
-        for obs in self.polygons:
-            for coord in obs:
-                x_coords.add(coord[0])
-        x_coords = sorted(x_coords)
+        # Get vertical line edges
+        vertical_edges = []
+        for line in self.vertical_lines:
+            vertical_edges.append(
+                ShapelyLineString([(line.p.x, line.p.y), (line.q.x, line.q.y)])
+            )
 
-        # Split cells for each x value
-        for x in x_coords:
-            if x == self.x_min or x == self.x_max:
-                continue
-            vert_line = LineString([(x, self.y_min), (x, self.y_max)])
-            new_cells = []
-            for cell in cells:
-                # Split cell on intersection
-                if cell.intersects(vert_line):
-                    new_split = split(cell, vert_line)
-                    for geom in new_split.geoms:
-                        new_cells.append(geom)
-                else:
-                    new_cells.append(cell)
-            cells = new_cells
+        # Combine edges
+        edges = workspace_edges + obstacle_edges + vertical_edges
+        cells = list(polygonize(unary_union(edges)))
 
         # Get cell bounds and centroids
         cell_bounds = []
         centroids = []
         for cell in cells:
-            coords = list(cell.exterior.coords)
-            if coords[0] == coords[-1]:
-                coords = coords[:-1]
-            cell_bounds.append(np.array(coords))
+            # Don't include obstacles
+            if any(obstacle.contains(cell.centroid) for obstacle in obstacles):
+                continue
+
+            # Get bounds
+            coords = np.array(cell.exterior.coords[:-1])
+            cell_bounds.append(coords)
+
+            # Get ceontroid
             centroids.append(np.array([cell.centroid.x, cell.centroid.y]))
 
         self.cells = cell_bounds
@@ -179,6 +276,7 @@ class PolygonEnvironment:
 
 if __name__ == "__main__":
     env = PolygonEnvironment()
-    env.read_env("./cell_decomposition/env0.txt")
-    env.exact_cell_decomposition()
+    env.read_env("./cell_decomposition/env3.txt")
+    env.trapezoidal_decomposition()
+    env.get_cells()
     env.plot_cells()
