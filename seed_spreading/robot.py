@@ -122,6 +122,7 @@ class Robot:
 
         
         path_pot_vector = self._construct_path_potential()
+        ## add the vector from the obstacles to the vector in path_pot_vect
 
         theta_d = np.arctan2(path_pot_vector[1], path_pot_vector[0])
         e_theta = theta_d - self.state[2]

@@ -9,35 +9,73 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sys import path
 from SeedPlanner import SeedPlanner
+from Path_Sticher import PathSticher
 from robot import Robot
+
 
 
 # Let's take the irregular octagonal path from the example in the seed spreader
 
 octagon_points = [(0.0, 4.3),
-                (2.9, 3.7),
-                (4.5, 1.2),
-                (4.1, -1.9),
-                (2.6, -4.1),
-                (0.0, -4.4),
-                (-2.8, -3.4),
-                (-4.2, 1.0)]
+            (2.9, 3.7),
+            (4.5, 1.2),
+            (4.1, -1.9),
+            (2.6, -4.1),
+            (0.0, -4.4),
+            (-2.8, -3.4),
+            (-4.2, 1.0)]
 
 octagon_points = np.array(octagon_points)
 
-seed_planner = SeedPlanner()
-seed_planner.load_polygon(octagon_points)
 
-start_point = np.array([-10, 0])
-end_point = np.array([10, 0])
+triangle_points = [(7.997, -3.074),  # mirrored point 1
+                    (7.397, 0.026),    # mirrored point 2
+                    (10, 10)]
 
-waypoint_path = seed_planner.get_seed_path(start_point, end_point)
+triangle_points = np.array(triangle_points)
+
+square = [
+        (4.5, 1.2),  # shared point 1
+        (4.1, -1.9), # shared point 2
+        (7.997, -3.074),  # mirrored point 1
+        (7.397, 0.026)    # mirrored point 2
+        ]
+
+square = np.array(square)
+
+
+Octagon_centroid = (0.39, -0.17)
+
+Triangle_centroid = [np.mean(triangle_points[:,0]), np.mean(triangle_points[:,1])]
+
+Square_centroid = (2.75, -0.55)
+
+centroids = np.array([Octagon_centroid, Square_centroid,Triangle_centroid])
+
+octogon_patch = SeedPlanner()
+octogon_patch.load_polygon(octagon_points)
+
+triangle_patch = SeedPlanner()
+triangle_patch.load_polygon(triangle_points)
+
+square_patch = SeedPlanner()
+square_patch.load_polygon(square)
+
+
+patches = [octogon_patch, square_patch, triangle_patch]
+
+sewer = PathSticher(patches, centroids)
+
+waypoint_path = sewer.get_quilted_path(np.array([-10,0]))
+
+start_point = [-10,0]
+end_point = [10,0]   
 
 waypoint_path = np.vstack([np.array(start_point), waypoint_path])
 waypoint_path = np.vstack([np.array(waypoint_path), end_point])
 
 
-ax = seed_planner.print_path(path=waypoint_path, show=False)
+ax = sewer.plot_path()
 
 robot_init_state = np.append(start_point, [np.pi/2,0,0])
 k_distance = 0.5
