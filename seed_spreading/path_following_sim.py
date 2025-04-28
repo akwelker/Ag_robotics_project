@@ -11,6 +11,7 @@ from sys import path
 from SeedPlanner import SeedPlanner
 from Path_Sticher import PathSticher
 from robot import Robot
+from DynamicObstacle import DynamicObstacle
 
 
 
@@ -43,7 +44,6 @@ square = [
 
 square = np.array(square)
 
-
 Octagon_centroid = (0.39, -0.17)
 
 Triangle_centroid = [np.mean(triangle_points[:,0]), np.mean(triangle_points[:,1])]
@@ -61,7 +61,6 @@ triangle_patch.load_polygon(triangle_points)
 square_patch = SeedPlanner()
 square_patch.load_polygon(square)
 
-
 patches = [octogon_patch, square_patch, triangle_patch]
 
 sewer = PathSticher(patches, centroids)
@@ -74,6 +73,11 @@ end_point = [10,0]
 waypoint_path = np.vstack([np.array(start_point), waypoint_path])
 waypoint_path = np.vstack([np.array(waypoint_path), end_point])
 
+# Dynamic Obstacle Creation:
+dyn_obs_1_path = [
+    np.linspace(3, -2.5, 100),
+    np.linspace(-3, 3, 100)
+]
 
 ax = sewer.plot_path()
 
@@ -84,6 +88,9 @@ k_angle = 5.0
 
 
 tractor = Robot(robot_init_state,waypoint_path,k_angle, k_distance, k_path)
+
+# Add obstacle:
+tractor.init_add_dynamic_obstacle([3,4], 350, dyn_obs_1_path)
 
 dt = 0.001
 
@@ -102,8 +109,9 @@ for i in range(0,len(t_span)):
     robot_locations[i+1] = tractor.state[0:2]
 
     if tractor.path_index >= len(tractor.path):
-
+        print(tractor.t_current)
         break
 
 ax.plot(robot_locations[:,0], robot_locations[:,1], 'b')
+ax.plot(dyn_obs_1_path[0], dyn_obs_1_path[1], 'r-')
 plt.show()

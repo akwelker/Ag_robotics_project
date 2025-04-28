@@ -1,11 +1,12 @@
 '''
-Adam Welker     Ag Robotics Project     Spring 25
+Adam Welker, Mathias Schoen    Ag Robotics Project     Spring 25
 
 robot.py -- python infrastructure for a simple path following robot. The
 robot is holonomic, 2-DOF, and can follow a set path (while avoiding obstacles).
 '''
 
 import numpy as np
+from DynamicObstacle import DynamicObstacle
 
 class Robot:
 
@@ -18,6 +19,12 @@ class Robot:
     k_steering = None # The turning gain for the robot
     k_distance = None # The distance gain for the robot
     k_path = None # Potential Field gain
+
+    # Dynamic Obstacle Stuff
+    dynamic_obstacle_list = []  # List of all dynamic obstacles as sub-arrays
+    distance_gain = 10          # Gain for standard repelling function
+    t_current = 0
+
 
 
     def __init__(self, init_state:np.ndarray, path:np.ndarray, 
@@ -51,6 +58,10 @@ class Robot:
         self.k_path = k_path
 
         self.path_index = 0 # The index of the path that the robot is following
+
+    def init_add_dynamic_obstacle(self, dimensions, t_start, positions):
+        self.dynamic_obstacle_list.append(DynamicObstacle(dimensions, t_start, positions))
+
 
     def _construct_path_potential(self) -> np.ndarray:
         '''
@@ -87,6 +98,12 @@ class Robot:
 
         # Now we can calculate the potential field
         path_pot_vector = np.array([-self.k_path * e.item(0), np.linalg.norm(q) - e.item(1)])
+
+        # go through each obstacle and add the potential field:
+        for obstacle in self.dynamic_obstacle_list:
+            additional_vec = obstacle.evaluate_potential(self.t_current, self.state, self.distance_gain)
+            # if (additional_vec.any() > 0) : print(additional_vec) 
+            path_pot_vector = np.add(path_pot_vector, additional_vec)
 
         # Now rotate that back into the world frame
 
@@ -163,6 +180,8 @@ class Robot:
 
         args: dt: The time step to update the robot state by
         '''
+
+        self.t_current += dt
 
         # Get the control inputs
         dx = self.state[3] * np.cos(self.state[2]) * dt
