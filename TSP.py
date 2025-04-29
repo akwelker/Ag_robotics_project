@@ -19,16 +19,21 @@ class TSP:
     def __init__(self, env:ecd.PolygonEnvironment) -> None:
         '''
         Args:
-            decomposition: An ExactCellDecomposition object containing cells and obstacles.
+            env: a PolygonEnvironment object containing cells and obstacles.
         '''
         self.env = env
         env.read_env(_ENV)
         env.trapezoidal_decomposition()
         
         # Extract cells and obstacles
-        self.cells, self.centroids = env.get_cells()
-        self.obstacles = env.obstacles
+        polygons, centroids = env.get_cells()
+        self.cells = [
+            {'polygon': poly, 'centroid': centroid}
+            for poly, centroid in zip(polygons, centroids)
+        ]
         self.n = len(self.cells)
+        print(self.n)
+        self.obstacles = env.polygons
         self.distance_matrix = np.full((self.n, self.n), np.inf)
         
         # Preprocess obstacle edges ONCE
@@ -45,7 +50,6 @@ class TSP:
             for j in range(self.n):
                 if i == j:
                     continue
-
                 start = self.cells[i]['centroid']
                 end = self.cells[j]['centroid']
 
@@ -103,14 +107,38 @@ class TSP:
         ordered_cells = [self.cells[i] for i in best_order]
         return ordered_cells
 
+    def greedy_tsp(self) -> list:
+        '''Greedy TSP (nearest neighbor) for large n. Skips unreachable cells.'''
+        visited = [0]
+        remaining = set(range(1, self.n))
+        current = 0
+
+        while remaining:
+            valid_neighbors = [j for j in remaining if not np.isinf(self.distance_matrix[current][j])]
+
+            if not valid_neighbors:
+                print(f"Warning: No reachable unvisited neighbor from {current}. Skipping unreachable cells: {remaining}")
+                break  # Or continue with fallback logic
+
+            next_node = min(valid_neighbors, key=lambda j: self.distance_matrix[current][j])
+            visited.append(next_node)
+            remaining.remove(next_node)
+            current = next_node
+
+        # Try to end at the last cell if it's reachable
+        if self.n - 1 not in visited and not np.isinf(self.distance_matrix[current][self.n - 1]):
+            visited.append(self.n - 1)
+
+        return [self.cells[i] for i in visited]
+    
     def get_ordered_centroids(self) -> np.ndarray:
         '''Returns an array of centroids in optimal visiting order.'''
-        ordered_cells = self.brute_force_tsp()
+        ordered_cells = self.greedy_tsp()
         return np.array([cell['centroid'] for cell in ordered_cells])
 
     def get_ordered_polygons(self) -> list:
         '''Returns list of polygons in optimal visiting order.'''
-        ordered_cells = self.brute_force_tsp()
+        ordered_cells = self.greedy_tsp()
         return [cell['polygon'] for cell in ordered_cells]
     
 
@@ -128,4 +156,5 @@ if __name__ == "__main__":
     # Get the polygons in order
     ordered_polygons = planner.get_ordered_polygons()
 
-    print(ordered_centroids, ordered_polygons)
+    print("ordered centroids: ",ordered_centroids)
+    print("ordered polygons: ",ordered_polygons)
