@@ -8,6 +8,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import numpy as np
+import heapq
 import matplotlib.pyplot as plt
 import itertools
 import seed_spreading.SeedPlanner as sp
@@ -131,14 +132,65 @@ class TSP:
 
         return [self.cells[i] for i in visited]
     
+    def relaxed_tsp(self) -> list:
+        '''Greedy TSP with fallback that ensures every cell is visited, even if revisits are required.'''
+        visited = set()
+        path = []
+        current = 0
+        visited.add(current)
+        path.append(current)
+
+        while len(visited) < self.n:
+            # Find shortest path to the *nearest unvisited* cell (even through visited ones)
+            next_cell, sub_path = self.get_next_reachable_cell(current, visited)
+            if next_cell is None:
+                raise ValueError("No path found to reach all cells!")
+
+            # Add intermediate steps to path (may include revisits)
+            for node in sub_path[1:]:  # skip current node
+                path.append(node)
+                visited.add(node)
+            current = path[-1]
+
+        return [self.cells[i] for i in path]
+
+    def get_next_reachable_cell(self, start: int, visited: set) -> tuple:
+        '''Finds shortest path from start to nearest unvisited node using Dijkstra over distance matrix.'''
+        dist = [np.inf] * self.n
+        prev = [None] * self.n
+        dist[start] = 0
+        heap = [(0, start)]
+
+        while heap:
+            cost, u = heapq.heappop(heap)
+            if u not in visited:
+                # Reconstruct path
+                path = []
+                while u is not None:
+                    path.insert(0, u)
+                    u = prev[u]
+                return path[-1], path  # target, full path
+
+            for v in range(self.n):
+                if np.isinf(self.distance_matrix[u][v]):
+                    continue
+                alt = dist[u] + self.distance_matrix[u][v]
+                if alt < dist[v]:
+                    dist[v] = alt
+                    prev[v] = u
+                    heapq.heappush(heap, (alt, v))
+
+        return None, []  # no reachable unvisited cell
+
+
     def get_ordered_centroids(self) -> np.ndarray:
         '''Returns an array of centroids in optimal visiting order.'''
-        ordered_cells = self.greedy_tsp()
+        ordered_cells = self.relaxed_tsp()
         return np.array([cell['centroid'] for cell in ordered_cells])
 
     def get_ordered_polygons(self) -> list:
         '''Returns list of polygons in optimal visiting order.'''
-        ordered_cells = self.greedy_tsp()
+        ordered_cells = self.relaxed_tsp()
         return [cell['polygon'] for cell in ordered_cells]
     
 
