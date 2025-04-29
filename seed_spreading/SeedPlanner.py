@@ -102,30 +102,37 @@ class SeedPlanner:
 
         path = []
 
-        if compass_dir == "N" or compass_dir == "S":
 
-            path1 = self.get_vert_path(start, end, mirrored=False)
-            path2 = self.get_vert_path(end, start, mirrored=True)
+        try:
+            if compass_dir == "N" or compass_dir == "S":
 
-            # path is the path that has a start point closer to the start point
+                path1 = self.get_vert_path(start, end, mirrored=False)
+                path2 = self.get_vert_path(end, start, mirrored=True)
 
-            if np.linalg.norm(path1[0] - start) < np.linalg.norm(path2[0] - start):
-                path = path1
-            else:
-                path = path2
-
-        elif compass_dir == "E" or compass_dir == "W":
-                
-                path1 = self.get_horiz_path(start, end, mirrored=False)
-                path2 = self.get_horiz_path(end, start, mirrored=True)
-    
                 # path is the path that has a start point closer to the start point
-    
+
                 if np.linalg.norm(path1[0] - start) < np.linalg.norm(path2[0] - start):
                     path = path1
                 else:
                     path = path2
 
+            elif compass_dir == "E" or compass_dir == "W":
+                    
+                    path1 = self.get_horiz_path(start, end, mirrored=False)
+                    path2 = self.get_horiz_path(end, start, mirrored=True)
+        
+                    # path is the path that has a start point closer to the start point
+        
+                    if np.linalg.norm(path1[0] - start) < np.linalg.norm(path2[0] - start):
+                        path = path1
+                    else:
+                        path = path2
+
+        except:
+            if len(path) == 0:
+                print("No path found")
+                path = np.array([start, end])
+        
         self.path = path
         return path
 

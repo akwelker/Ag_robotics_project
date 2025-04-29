@@ -6,7 +6,7 @@ robot is holonomic, 2-DOF, and can follow a set path (while avoiding obstacles).
 '''
 
 import numpy as np
-from DynamicObstacle import DynamicObstacle
+from seed_spreading.DynamicObstacle import DynamicObstacle
 
 class Robot:
 
@@ -79,7 +79,7 @@ class Robot:
         if self.path_index > 0:
             previous_point = self.path[self.path_index - 1]
         else:
-            previous_point = self.speed[0:2]
+            previous_point = self.state[0:2]
 
         # Find the distance the the previous point to the current state
 

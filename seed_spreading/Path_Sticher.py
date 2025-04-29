@@ -10,7 +10,7 @@ of the list. It will not check for collisions between the polygons. It only
 import numpy as np
 import matplotlib.pyplot as plt
 
-from SeedPlanner import SeedPlanner
+from seed_spreading.SeedPlanner import SeedPlanner
 
 
 class PathSticher:
