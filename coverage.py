@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     dt = 0.001
 
-    t_span = np.arange(0,10000,dt)
+    t_span = np.arange(0,50000,dt)
 
     robot_locations = np.empty((len(t_span) + 1, 2))
     robot_locations[:] = np.NaN
