@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.lines import Line2D
 from cell_decomposition.ecd import PolygonEnvironment
 from seed_spreading.SeedPlanner import SeedPlanner
 from seed_spreading.Path_Sticher import PathSticher
@@ -135,4 +136,15 @@ if __name__ == "__main__":
 
     ax3.set_title("Robot Path")
     plt.savefig("figures/robot_path.png")
+
+    lines = [Line2D([0], [0], color='k', lw=2),
+             Line2D([0], [0], color='r', lw=2),
+             Line2D([0], [0], color='b', lw=2),
+             Line2D([0], [0], color='orange', lw=2)]
+
+    labels = ['Cell Boundaries', 'Robot Waypoint Path', 'Robot Path', 'Dynamic Obstacle Path']
+    ax3.legend(lines, labels, loc='upper right')
+
+    ax3.set_xlabel("X")
+    ax3.set_ylabel("Y")
     plt.show()
