@@ -128,10 +128,11 @@ class SeedPlanner:
                     else:
                         path = path2
 
-        except:
-            if len(path) == 0:
-                print("No path found")
-                path = np.array([start, end])
+        except Exception as e:
+
+            print(bcolors.WARNING + '[WARNING] ' + bcolors.ENDC + f"No Seed Path Found Through Cell with Vertices:")
+            print(self.vertices)
+            path = np.array([start, end])
         
         self.path = path
         return path
@@ -437,7 +438,7 @@ class Polygon_Edge:
                     if edge_y_max > line_y_min:
 
                         Ix = self.x_intercept
-                        Iy = self.edge_y_max
+                        Iy = edge_y_max
 
                     if line_y_max > edge_y_min:
 
@@ -508,6 +509,17 @@ class Polygon_Edge:
         else:
 
             return (False, None)
+        
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
         
 
     
