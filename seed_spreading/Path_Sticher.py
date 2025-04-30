@@ -119,7 +119,7 @@ class PathSticher:
 
         # Plot the path
 
-        ax.plot(self.quilted_path[:,0], self.quilted_path[:,1], 'r-o')
+        ax.plot(self.quilted_path[:,0], self.quilted_path[:,1], 'r-o', alpha=0.5)
         ax.set_title("Stitched Path")
 
         ax.set_xlabel("X")

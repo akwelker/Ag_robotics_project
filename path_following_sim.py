@@ -7,11 +7,12 @@ class to simulate a field robot
 
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.patches import Circle, Rectangle
 from sys import path
-from SeedPlanner import SeedPlanner
-from Path_Sticher import PathSticher
-from robot import Robot
-from DynamicObstacle import DynamicObstacle
+from seed_spreading.SeedPlanner import SeedPlanner
+from seed_spreading.Path_Sticher import PathSticher
+from seed_spreading.robot import Robot
+from seed_spreading.DynamicObstacle import DynamicObstacle
 
 
 
@@ -73,11 +74,15 @@ end_point = [10,0]
 waypoint_path = np.vstack([np.array(start_point), waypoint_path])
 waypoint_path = np.vstack([np.array(waypoint_path), end_point])
 
+dt = 0.001
+
+t_span = np.arange(0,1000,dt)
+
+
 # Dynamic Obstacle Creation:
-dyn_obs_1_path = [
-    np.linspace(3, -2.5, 100),
-    np.linspace(-3, 3, 100)
-]
+A = 2
+w = 0.25 * 2*np.pi
+dyn_obs_1_path = [A*np.cos(w*t_span), A*np.sin(w*t_span)]
 
 ax = sewer.plot_path()
 
@@ -92,14 +97,18 @@ tractor = Robot(robot_init_state,waypoint_path,k_angle, k_distance, k_path)
 # Add obstacle:
 tractor.init_add_dynamic_obstacle([3,4], 350, dyn_obs_1_path)
 
-dt = 0.001
-
-t_span = np.arange(0,1000,dt)
 
 robot_locations = np.empty((len(t_span) + 1, 2))
 robot_locations[:] = np.NaN
 
 robot_locations[0] = robot_init_state[0:2]
+
+# Initialize the obstacle and the robot patches
+robot_patch = Circle((robot_locations[0][0], robot_locations[0][1]), 0.2, color='blue')
+ax.add_patch(robot_patch)
+obstacle_patch = Circle((dyn_obs_1_path[0][0], dyn_obs_1_path[1][0]), 0.2, color='red')
+ax.add_patch(obstacle_patch)
+
 
 for i in range(0,len(t_span)):
 
@@ -112,6 +121,17 @@ for i in range(0,len(t_span)):
         print(tractor.t_current)
         break
 
-ax.plot(robot_locations[:,0], robot_locations[:,1], 'b')
-ax.plot(dyn_obs_1_path[0], dyn_obs_1_path[1], 'r-')
+    
+    if i % 50 == 0:
+
+        # Update the robot and obstacle patches
+        robot_patch.set_center((robot_locations[i+1][0], robot_locations[i+1][1]))
+
+        if i < len(dyn_obs_1_path[0]):
+            obstacle_patch.set_center((dyn_obs_1_path[0][i], dyn_obs_1_path[1][i]))
+        
+        # Update the plot
+        plt.draw()
+        plt.pause(0.001)
+
 plt.show()

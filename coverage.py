@@ -109,10 +109,11 @@ if __name__ == "__main__":
     t_span = np.arange(0, 50000, dt)
     start_point = np.array([-100, -50])
 
-    R = 50
+    
+    R = 25
     X0 = 0
     y0 = 0
-    w = 1.0 * 2 * np.pi
+    w = 0.25 * 2*np.pi
 
     dyn_obs_1_path = [R * np.cos(w * t_span) + X0, R * np.sin(w * t_span) + y0]
 
@@ -124,7 +125,9 @@ if __name__ == "__main__":
     tractor = Robot(robot_init_state, waypoint_path, k_angle, k_distance, k_path)
 
     # Add obstacle:
-    tractor.init_add_dynamic_obstacle([3, 4], 350, dyn_obs_1_path)
+    tractor.init_add_dynamic_obstacle([10, 10], 0, dyn_obs_1_path)
+
+
 
     robot_locations = np.empty((len(t_span) + 1, 2))
     robot_locations[:] = np.NaN
@@ -144,7 +147,7 @@ if __name__ == "__main__":
             break
 
     ax3.plot(robot_locations[:, 0], robot_locations[:, 1], "b")
-    ax3.plot(dyn_obs_1_path[0], dyn_obs_1_path[1], color="orange")
+    # ax3.plot(dyn_obs_1_path[0][0:i], dyn_obs_1_path[1][0:i], color="orange")
 
     ax3.set_title("Robot Path")
     plt.savefig("figures/robot_path.png")
@@ -166,4 +169,5 @@ if __name__ == "__main__":
 
     ax3.set_xlabel("X")
     ax3.set_ylabel("Y")
+
     plt.show()
