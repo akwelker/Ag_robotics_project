@@ -9,9 +9,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString as ShapelyLineString, Polygon as ShapelyPolygon
 from shapely.ops import unary_union, polygonize
-from polygon import Point, Edge, Polygon
+from cell_decomposition.polygon import Point, Edge, Polygon
 from os import path
-from DynamicObstacle import DynamicObstacle
+from  seed_spreading.DynamicObstacle import DynamicObstacle
 
 _BOUNDS = "Bounds:"
 _OBSTACLE = "Obstacle:"

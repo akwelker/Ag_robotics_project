@@ -107,7 +107,7 @@ class SeedPlanner:
             if compass_dir == "N" or compass_dir == "S":
 
                 path1 = self.get_vert_path(start, end, mirrored=False)
-                path2 = self.get_vert_path(end, start, mirrored=True)
+                path2 = self.get_vert_path(start, end, mirrored=True)
 
                 # path is the path that has a start point closer to the start point
 
@@ -119,7 +119,7 @@ class SeedPlanner:
             elif compass_dir == "E" or compass_dir == "W":
                     
                     path1 = self.get_horiz_path(start, end, mirrored=False)
-                    path2 = self.get_horiz_path(end, start, mirrored=True)
+                    path2 = self.get_horiz_path(start, end, mirrored=True)
         
                     # path is the path that has a start point closer to the start point
         
@@ -132,11 +132,11 @@ class SeedPlanner:
 
             print(bcolors.WARNING + '[WARNING] ' + bcolors.ENDC + f"No Seed Path Found Through Cell with Vertices:")
             print(self.vertices)
+            print(bcolors.UNDERLINE + "Exception Message: " + bcolors.ENDC + str(e))
             path = np.array([start, end])
         
         self.path = path
         return path
-
         
 
 

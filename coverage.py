@@ -70,7 +70,6 @@ if __name__ == "__main__":
     ax1.set_ylabel("Y")
     ax1.set_aspect("equal", adjustable="box")
     plt.savefig("figures/cell_decomposition.png")
-    plt.show()
 
     # ===========================================================================#
     # TODO: Traveling Salesman
@@ -94,7 +93,7 @@ if __name__ == "__main__":
         seed_patches.append(seed_planner)
 
     sticher = PathSticher(seed_patches, centroids)
-    waypoint_path = sticher.get_quilted_path([-10, 0])
+    waypoint_path = sticher.get_quilted_path([-100, -50])
     ax3 = sticher.plot_path()
     ax3.set_aspect("equal", adjustable="box")
 
@@ -104,8 +103,18 @@ if __name__ == "__main__":
     # ==========================================================================#
     # Run the simulation of the robot
     # ==========================================================================#
-    start_point = np.array([-10, 0])
-    dyn_obs_1_path = [np.linspace(30, -25, 100), np.linspace(-30, 30, 100)]
+
+    dt = 0.01
+    t_span = np.arange(0, 50000, dt)
+    start_point = np.array([-100, -50])
+
+    
+    R = 50
+    X0 = 0
+    y0 = 0
+    w = 1.0 * 2*np.pi
+
+    dyn_obs_1_path = [R*np.cos(w*t_span)  + X0, R*np.sin(w*t_span)  + y0]
 
     robot_init_state = np.append(start_point, [np.pi / 2, 0, 0])
     k_distance = 0.5
@@ -117,9 +126,7 @@ if __name__ == "__main__":
     # Add obstacle:
     tractor.init_add_dynamic_obstacle([3, 4], 350, dyn_obs_1_path)
 
-    dt = 0.01
 
-    t_span = np.arange(0, 50000, dt)
 
     robot_locations = np.empty((len(t_span) + 1, 2))
     robot_locations[:] = np.NaN
