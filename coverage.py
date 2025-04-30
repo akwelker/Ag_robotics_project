@@ -171,3 +171,17 @@ if __name__ == "__main__":
     ax3.set_ylabel("Y")
 
     plt.show()
+
+    print("Simulation Complete")
+    print("------------------------")
+    print("Area of Environment: ", area)
+
+    area_passed = 0
+
+    for j in range(0, i-1):
+        area_passed += np.linalg.norm(robot_locations[j+1] - robot_locations[j])
+
+    area_passed = area_passed * 5
+    print("Area Passed: ", area_passed)
+    print("Percentage of Area Passed: ", area_passed / area * 100, "%")
+    print("Total Time: ", tractor.t_current)
