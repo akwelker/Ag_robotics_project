@@ -7,6 +7,7 @@ from seed_spreading.Path_Sticher import PathSticher
 from seed_spreading.robot import Robot
 from seed_spreading.DynamicObstacle import DynamicObstacle
 from tqdm import tqdm
+import TSP
 
 def draw_cells(cell_bounds, centroid, ax=None)->plt.axes:
     '''
@@ -68,8 +69,11 @@ if __name__ == "__main__":
     #===========================================================================#
     # TODO: Traveling Salesman
     #===========================================================================#
-
+    traveling = TSP(env,cell_bounds,centroids)
     
+    ordered_centroids = traveling.get_ordered_centroids()
+    ordered_polygons = traveling.get_ordered_polygons()
+
     #===========================================================================#
     # Create the stiched seed spreading path
     #===========================================================================#
