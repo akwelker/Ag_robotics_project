@@ -14,20 +14,17 @@ import itertools
 import seed_spreading.SeedPlanner as sp
 import cell_decomposition.ecd as ecd
 
-_ENV = "./cell_decomposition/env3.txt"
 
 class TSP:
-    def __init__(self, env:ecd.PolygonEnvironment) -> None:
+    def __init__(self, env, polygon_bounds, centroid_bounds) -> None:
         '''
         Args:
             env: a PolygonEnvironment object containing cells and obstacles.
         '''
-        self.env = env
-        env.read_env(_ENV)
-        env.trapezoidal_decomposition()
         
         # Extract cells and obstacles
-        polygons, centroids = env.get_cells()
+        polygons = polygon_bounds 
+        centroids = centroid_bounds
         self.cells = [
             {'polygon': poly, 'centroid': centroid}
             for poly, centroid in zip(polygons, centroids)
