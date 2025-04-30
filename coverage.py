@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # ===========================================================================#
     # Get environment
     # ===========================================================================#
-    env_file = "./cell_decomposition/env0.txt"
+    env_file = "./cell_decomposition/env1.txt"
 
     # Build polygon environment for cell decompostion
     env = PolygonEnvironment()
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     # Run the simulation of the robot
     # ==========================================================================#
     start_point = np.array([-10, 0])
-    dyn_obs_1_path = [np.linspace(3, -2.5, 100), np.linspace(-3, 3, 100)]
+    dyn_obs_1_path = [np.linspace(30, -25, 100), np.linspace(-30, 30, 100)]
 
     robot_init_state = np.append(start_point, [np.pi / 2, 0, 0])
     k_distance = 0.5
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # Add obstacle:
     tractor.init_add_dynamic_obstacle([3, 4], 350, dyn_obs_1_path)
 
-    dt = 0.001
+    dt = 0.01
 
     t_span = np.arange(0, 50000, dt)
 
@@ -126,6 +126,8 @@ if __name__ == "__main__":
 
     robot_locations[0] = robot_init_state[0:2]
 
+
+    print("--- RUNNING SIMULATION ---")
     for i in tqdm(range(0, len(t_span))):
 
         tractor.update_control()
@@ -134,11 +136,11 @@ if __name__ == "__main__":
         robot_locations[i + 1] = tractor.state[0:2]
 
         if tractor.path_index >= len(tractor.path):
-            print(tractor.t_current)
-            break
+            # print(tractor.t_current)
+            break                           
 
     ax3.plot(robot_locations[:, 0], robot_locations[:, 1], "b")
-    ax3.plot(dyn_obs_1_path[0], dyn_obs_1_path[1], "r-")
+    ax3.plot(dyn_obs_1_path[0], dyn_obs_1_path[1], color="orange")
 
     ax3.set_title("Robot Path")
     plt.savefig("figures/robot_path.png")
