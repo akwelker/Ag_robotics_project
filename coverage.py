@@ -62,6 +62,7 @@ if __name__ == "__main__":
     # ===========================================================================#
     env.trapezoidal_decomposition()
     cell_bounds, centroids = env.get_cells()
+    area = env.get_area()
 
     ax1 = draw_cells(cell_bounds, centroids)
 
@@ -108,13 +109,12 @@ if __name__ == "__main__":
     t_span = np.arange(0, 50000, dt)
     start_point = np.array([-100, -50])
 
-    
     R = 50
     X0 = 0
     y0 = 0
-    w = 1.0 * 2*np.pi
+    w = 1.0 * 2 * np.pi
 
-    dyn_obs_1_path = [R*np.cos(w*t_span)  + X0, R*np.sin(w*t_span)  + y0]
+    dyn_obs_1_path = [R * np.cos(w * t_span) + X0, R * np.sin(w * t_span) + y0]
 
     robot_init_state = np.append(start_point, [np.pi / 2, 0, 0])
     k_distance = 0.5
@@ -126,13 +126,10 @@ if __name__ == "__main__":
     # Add obstacle:
     tractor.init_add_dynamic_obstacle([3, 4], 350, dyn_obs_1_path)
 
-
-
     robot_locations = np.empty((len(t_span) + 1, 2))
     robot_locations[:] = np.NaN
 
     robot_locations[0] = robot_init_state[0:2]
-
 
     print("--- RUNNING SIMULATION ---")
     for i in tqdm(range(0, len(t_span))):
@@ -144,7 +141,7 @@ if __name__ == "__main__":
 
         if tractor.path_index >= len(tractor.path):
             # print(tractor.t_current)
-            break                           
+            break
 
     ax3.plot(robot_locations[:, 0], robot_locations[:, 1], "b")
     ax3.plot(dyn_obs_1_path[0], dyn_obs_1_path[1], color="orange")

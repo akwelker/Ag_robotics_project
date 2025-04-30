@@ -11,7 +11,7 @@ from shapely.geometry import LineString as ShapelyLineString, Polygon as Shapely
 from shapely.ops import unary_union, polygonize
 from cell_decomposition.polygon import Point, Edge, Polygon
 from os import path
-from  seed_spreading.DynamicObstacle import DynamicObstacle
+from seed_spreading.DynamicObstacle import DynamicObstacle
 
 _BOUNDS = "Bounds:"
 _OBSTACLE = "Obstacle:"
@@ -69,7 +69,7 @@ class PolygonEnvironment:
         for i in range(0, 20):
             # Read in obstacle file:
             obs_file = f"cell_decomposition/environment.txt_dynobs_{i}.txt"
-            if (path.exists(obs_file)):
+            if path.exists(obs_file):
                 actual_file = open(obs_file, "r")
                 print(f"Found obstacle {i}, adding...")
                 # Initialize data storage:
@@ -93,7 +93,6 @@ class PolygonEnvironment:
 
                 this_obs = DynamicObstacle(dimensions, start_time, path)
                 self.dynobs.append(this_obs)
-
 
     def parse_bounds(self, line_data):
         """
@@ -281,6 +280,20 @@ class PolygonEnvironment:
         self.cells = cell_bounds
         self.centroids = centroids
         return cell_bounds, centroids
+
+    def get_area(self):
+        """
+        Returns the total area of the cells
+        """
+        if self.cells is None:
+            print("Environment needs cells. Has cell decomposition been performed?")
+            return
+
+        area = 0
+        for bounds in self.cells:
+            cell = ShapelyPolygon(bounds)
+            area += cell.area
+        return area
 
     def plot_cells(self):
         """
