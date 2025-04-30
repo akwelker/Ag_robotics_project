@@ -9,7 +9,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString as ShapelyLineString, Polygon as ShapelyPolygon
 from shapely.ops import unary_union, polygonize
-from .polygon import Point, Edge, Polygon
+from polygon import Point, Edge, Polygon
+from os import path
+from DynamicObstacle import DynamicObstacle
 
 _BOUNDS = "Bounds:"
 _OBSTACLE = "Obstacle:"
@@ -37,6 +39,7 @@ class PolygonEnvironment:
         }
         self.cells = None
         self.centroids = None
+        self.dynobs = []
 
     def read_env(self, env_file_path):
         """
@@ -56,6 +59,41 @@ class PolygonEnvironment:
             if line_info[0].startswith("#"):
                 continue
             self.line_parser[line_info[0]](line_info[1:])
+
+        """
+        Next read in the dynamic obstacles, stored in separate files:
+        DymanicObstacle: <width>, <height>, <start_time>
+        DynamicObstacle: 5,9,562
+        and then below that all the coordinates it visits:
+        """
+        for i in range(0, 20):
+            # Read in obstacle file:
+            obs_file = f"cell_decomposition/environment.txt_dynobs_{i}.txt"
+            if (path.exists(obs_file)):
+                actual_file = open(obs_file, "r")
+                print(f"Found obstacle {i}, adding...")
+                # Initialize data storage:
+                dimensions = None
+                start_time = None
+                dynobs_path = []
+                # Read the line & keep track of which line
+                file_infos = actual_file.readlines()
+                file_idx = 0
+                for l in file_infos:
+                    # Extract first line info:
+                    if file_idx == 0:
+                        raw_vals = l.strip().split()
+                        raw_vals = raw_vals[1].split(",")
+                        print(raw_vals)
+                        dimensions = [raw_vals[0], raw_vals[1]]
+                        start_time = raw_vals[2]
+                    else:
+                        dynobs_path.append([raw_vals[0], raw_vals[1]])
+                    file_idx += 1
+
+                this_obs = DynamicObstacle(dimensions, start_time, path)
+                self.dynobs.append(this_obs)
+
 
     def parse_bounds(self, line_data):
         """
